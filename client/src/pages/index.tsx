@@ -41,7 +41,7 @@ function Pager({ page, total, limit, onChange }: { page: number; total: number; 
 export function Login() {
   const { login } = useAuth();
   const navigate = useNavigate();
-  const [email, setEmail]       = useState('admin@eduversal.com');
+  const [email, setEmail]       = useState('');
   const [password, setPassword] = useState('');
   const [error, setError]       = useState('');
   const [loading, setLoading]   = useState(false);
@@ -58,7 +58,6 @@ export function Login() {
     <div style={{ minHeight: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 24, background: 'radial-gradient(ellipse at 60% 20%,rgba(99,102,241,.07) 0%,transparent 60%),var(--bg)' }}>
       <div className="fu" style={{ width: '100%', maxWidth: 380 }}>
         <div style={{ textAlign: 'center', marginBottom: 36 }}>
-          <div style={{ width: 48, height: 48, borderRadius: 13, background: 'linear-gradient(135deg,var(--accent),#818cf8)', display: 'inline-flex', alignItems: 'center', justifyContent: 'center', fontSize: 20, marginBottom: 18, boxShadow: '0 0 28px var(--accent-dim)' }}>✦</div>
           <h1 style={{ fontFamily: 'var(--ff-display)', fontSize: 26, fontWeight: 400, marginBottom: 4 }}>Beyond Classroom</h1>
           <p style={{ color: 'var(--text-3)', fontFamily: 'var(--ff-mono)', fontSize: 10, letterSpacing: '.1em', textTransform: 'uppercase' }}>Admin Portal</p>
         </div>
@@ -93,7 +92,7 @@ export function Dashboard() {
     <div style={{ padding: '36px 40px', maxWidth: 860 }}>
       <div className="fu" style={{ marginBottom: 40 }}>
         <p style={{ fontFamily: 'var(--ff-mono)', fontSize: 11, color: 'var(--text-3)', textTransform: 'uppercase', letterSpacing: '.1em', marginBottom: 8 }}>Welcome back</p>
-        <h1 style={{ fontFamily: 'var(--ff-display)', fontSize: 38, fontWeight: 400 }}>{user?.full_name || 'Admin'} <span style={{ color: 'var(--accent)' }}>✦</span></h1>
+        <h1 style={{ fontFamily: 'var(--ff-display)', fontSize: 38, fontWeight: 400 }}>{user?.full_name || 'Admin'}</h1>
       </div>
       <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12 }}>
         {links.map(l => (
@@ -562,7 +561,6 @@ export function SendNotification() {
             <div className="card fi" style={{ background: 'var(--bg-elevated)', border: '1px solid var(--border-light)', padding: 16 }}>
               <span className="label" style={{ display: 'block', marginBottom: 10 }}>Preview</span>
               <div style={{ display: 'flex', gap: 10 }}>
-                <div style={{ width: 34, height: 34, borderRadius: 9, background: 'linear-gradient(135deg,var(--accent),#818cf8)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 14, flexShrink: 0 }}>✦</div>
                 <div>
                   <div style={{ fontSize: 13, fontWeight: 600, marginBottom: 4 }}>{title || 'Title…'}</div>
                   <div style={{ fontSize: 12, color: 'var(--text-2)', lineHeight: 1.5 }}>{body || 'Message…'}</div>

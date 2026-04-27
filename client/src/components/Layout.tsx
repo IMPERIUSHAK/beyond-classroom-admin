@@ -25,12 +25,6 @@ export default function Layout() {
         {/* logo */}
         <div style={{ padding: '22px 20px 20px', borderBottom: '1px solid var(--border)' }}>
           <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
-            <div style={{
-              width: 30, height: 30, borderRadius: 8, flexShrink: 0,
-              background: 'linear-gradient(135deg,var(--accent),#818cf8)',
-              display: 'flex', alignItems: 'center', justifyContent: 'center',
-              fontSize: 13, boxShadow: '0 0 14px var(--accent-dim)',
-            }}>✦</div>
             <div>
               <div style={{ fontFamily: 'var(--ff-display)', fontSize: 14, lineHeight: 1.2 }}>Beyond Classroom</div>
               <div style={{ fontFamily: 'var(--ff-mono)', fontSize: 9, color: 'var(--text-3)', textTransform: 'uppercase', letterSpacing: '.1em' }}>Admin Panel</div>
