@@ -7,6 +7,7 @@ const NAV = [
   { to: '/notifications', label: 'Send Notification', icon: '📣' },
   { to: '/schools',       label: 'Schools',           icon: '🏫' },
   { to: '/users',         label: 'Users',             icon: '👥' },
+  {to: '/approves',       label: 'Approves',          icon: '🚩' },
 ];
 
 export default function Layout() {

@@ -41,7 +41,7 @@ function Pager({ page, total, limit, onChange }: { page: number; total: number; 
 export function Login() {
   const { login } = useAuth();
   const navigate = useNavigate();
-  const [email, setEmail]       = useState('');
+  const [email, setEmail]       = useState('admin@eduversal.com');
   const [password, setPassword] = useState('');
   const [error, setError]       = useState('');
   const [loading, setLoading]   = useState(false);
@@ -58,6 +58,7 @@ export function Login() {
     <div style={{ minHeight: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 24, background: 'radial-gradient(ellipse at 60% 20%,rgba(99,102,241,.07) 0%,transparent 60%),var(--bg)' }}>
       <div className="fu" style={{ width: '100%', maxWidth: 380 }}>
         <div style={{ textAlign: 'center', marginBottom: 36 }}>
+          <div style={{ width: 48, height: 48, borderRadius: 13, background: 'linear-gradient(135deg,var(--accent),#818cf8)', display: 'inline-flex', alignItems: 'center', justifyContent: 'center', fontSize: 20, marginBottom: 18, boxShadow: '0 0 28px var(--accent-dim)' }}>✦</div>
           <h1 style={{ fontFamily: 'var(--ff-display)', fontSize: 26, fontWeight: 400, marginBottom: 4 }}>Beyond Classroom</h1>
           <p style={{ color: 'var(--text-3)', fontFamily: 'var(--ff-mono)', fontSize: 10, letterSpacing: '.1em', textTransform: 'uppercase' }}>Admin Portal</p>
         </div>
@@ -92,7 +93,7 @@ export function Dashboard() {
     <div style={{ padding: '36px 40px', maxWidth: 860 }}>
       <div className="fu" style={{ marginBottom: 40 }}>
         <p style={{ fontFamily: 'var(--ff-mono)', fontSize: 11, color: 'var(--text-3)', textTransform: 'uppercase', letterSpacing: '.1em', marginBottom: 8 }}>Welcome back</p>
-        <h1 style={{ fontFamily: 'var(--ff-display)', fontSize: 38, fontWeight: 400 }}>{user?.full_name || 'Admin'}</h1>
+        <h1 style={{ fontFamily: 'var(--ff-display)', fontSize: 38, fontWeight: 400 }}>{user?.full_name || 'Admin'} <span style={{ color: 'var(--accent)' }}>✦</span></h1>
       </div>
       <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12 }}>
         {links.map(l => (
@@ -212,16 +213,28 @@ export function Schools() {
 // ─────────────────────────────────────────────────────────────────────────────
 const CATS = ['', 'Science', 'Math', 'Art', 'Sports', 'Technology', 'Literature', 'Music'];
 
+const EMPTY_FORM = { name: '', organizer_name: '', category: '', grade_level: '', fee: '0', description: '', reg_open_date: '', reg_close_date: '', competition_date: '' };
+
+function F({ label, children }: { label: string; children: React.ReactNode }) {
+  return <div><label className="label">{label}</label>{children}</div>;
+}
+
+function fmtForInput(d?: string) {
+  if (!d) return '';
+  return new Date(d).toISOString().split('T')[0];
+}
+
 export function Competitions() {
-  const [comps, setComps]   = useState<Competition[]>([]);
+  const [comps, setComps]     = useState<Competition[]>([]);
   const [loading, setLoading] = useState(true);
-  const [total, setTotal]   = useState(0);
-  const [page, setPage]     = useState(1);
-  const [cat, setCat]       = useState('');
+  const [total, setTotal]     = useState(0);
+  const [page, setPage]       = useState(1);
+  const [cat, setCat]         = useState('');
   const [showAdd, setShowAdd] = useState(false);
-  const [saving, setSaving] = useState(false);
-  const [msg, setMsg]       = useState<{ ok: boolean; text: string } | null>(null);
-  const [form, setForm] = useState({ name: '', organizer_name: '', category: '', grade_level: '', fee: '0', description: '', reg_open_date: '', reg_close_date: '', competition_date: '' });
+  const [editId, setEditId]   = useState<string | null>(null);
+  const [saving, setSaving]   = useState(false);
+  const [msg, setMsg]         = useState<{ ok: boolean; text: string } | null>(null);
+  const [form, setForm]       = useState(EMPTY_FORM);
   const LIMIT = 15;
 
   const load = async () => {
@@ -234,14 +247,43 @@ export function Competitions() {
   };
   useEffect(() => { load(); }, [page, cat]);
 
+  const openAdd = () => {
+    setEditId(null);
+    setForm(EMPTY_FORM);
+    setShowAdd(true);
+  };
+
+  const openEdit = (c: Competition) => {
+    setEditId(c.id);
+    setForm({
+      name:             c.name,
+      organizer_name:   c.organizer_name,
+      category:         c.category    || '',
+      grade_level:      c.grade_level || '',
+      fee:              String(c.fee  ?? 0),
+      description:      c.description || '',
+      reg_open_date:    fmtForInput(c.reg_open_date),
+      reg_close_date:   fmtForInput(c.reg_close_date),
+      competition_date: fmtForInput(c.competition_date),
+    });
+    setShowAdd(true);
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  };
+
+  const closeForm = () => { setShowAdd(false); setEditId(null); setForm(EMPTY_FORM); };
+
   const save = async () => {
     if (!form.name || !form.organizer_name) return;
     setSaving(true);
     try {
-      await competitionsApi.create({ ...form, fee: parseInt(form.fee) || 0 });
-      setMsg({ ok: true, text: 'Competition created!' });
-      setShowAdd(false);
-      setForm({ name: '', organizer_name: '', category: '', grade_level: '', fee: '0', description: '', reg_open_date: '', reg_close_date: '', competition_date: '' });
+      if (editId) {
+        await competitionsApi.update(editId, { ...form, fee: parseInt(form.fee) || 0 });
+        setMsg({ ok: true, text: 'Competition updated!' });
+      } else {
+        await competitionsApi.create({ ...form, fee: parseInt(form.fee) || 0 });
+        setMsg({ ok: true, text: 'Competition created!' });
+      }
+      closeForm();
       load();
     } catch (e) { setMsg({ ok: false, text: (e as Error).message }); }
     finally { setSaving(false); }
@@ -259,34 +301,46 @@ export function Competitions() {
     <div style={{ padding: '36px 40px', maxWidth: 1060 }}>
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-end', marginBottom: 24 }}>
         <PageHeader sub="Management" title="Competitions" count={total} />
-        <button className="btn btn-primary" onClick={() => setShowAdd(v => !v)} style={{ marginBottom: 28 }}>{showAdd ? '✕ Cancel' : '+ New'}</button>
+        <button className="btn btn-primary" onClick={showAdd ? closeForm : openAdd} style={{ marginBottom: 28 }}>
+          {showAdd ? '✕ Cancel' : '+ New'}
+        </button>
       </div>
 
       {msg && <Toast ok={msg.ok} msg={msg.text} />}
 
+      {/* ── Add / Edit form ── */}
       {showAdd && (
-        <div className="card fu" style={{ marginBottom: 20 }}>
-          <p className="label" style={{ marginBottom: 18 }}>New Competition</p>
+        <div className="card fu" style={{ marginBottom: 20, borderColor: editId ? 'rgba(99,102,241,.35)' : 'var(--border)' }}>
+          <p className="label" style={{ marginBottom: 18 }}>
+            {editId ? '✎ Edit Competition' : 'New Competition'}
+          </p>
           <div style={{ display: 'grid', gridTemplateColumns: '2fr 1fr', gap: 14, marginBottom: 14 }}>
-            <div><label className="label">Name *</label><input className="input" value={form.name} onChange={e => setForm(f => ({ ...f, name: e.target.value }))} placeholder="Olimpiade Matematika Nasional" /></div>
-            <div><label className="label">Category</label>
+            <F label="Name *"><input className="input" value={form.name} onChange={e => setForm(f => ({ ...f, name: e.target.value }))} placeholder="Olimpiade Matematika Nasional" /></F>
+            <F label="Category">
               <select className="input" value={form.category} onChange={e => setForm(f => ({ ...f, category: e.target.value }))}>
                 {CATS.map(c => <option key={c} value={c}>{c || 'Select…'}</option>)}
               </select>
-            </div>
+            </F>
           </div>
           <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: 14, marginBottom: 14 }}>
-            <div><label className="label">Organizer *</label><input className="input" value={form.organizer_name} onChange={e => setForm(f => ({ ...f, organizer_name: e.target.value }))} placeholder="Kemendikbud" /></div>
-            <div><label className="label">Grade Level</label><input className="input" value={form.grade_level} onChange={e => setForm(f => ({ ...f, grade_level: e.target.value }))} placeholder="SMP, SMA" /></div>
-            <div><label className="label">Fee (IDR)</label><input className="input" type="number" value={form.fee} onChange={e => setForm(f => ({ ...f, fee: e.target.value }))} /></div>
+            <F label="Organizer *"><input className="input" value={form.organizer_name} onChange={e => setForm(f => ({ ...f, organizer_name: e.target.value }))} placeholder="Kemendikbud" /></F>
+            <F label="Grade Level"><input className="input" value={form.grade_level} onChange={e => setForm(f => ({ ...f, grade_level: e.target.value }))} placeholder="SMP, SMA" /></F>
+            <F label="Fee (IDR)"><input className="input" type="number" value={form.fee} onChange={e => setForm(f => ({ ...f, fee: e.target.value }))} /></F>
           </div>
           <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: 14, marginBottom: 14 }}>
-            <div><label className="label">Reg Open</label><input className="input" type="date" value={form.reg_open_date} onChange={e => setForm(f => ({ ...f, reg_open_date: e.target.value }))} /></div>
-            <div><label className="label">Reg Close</label><input className="input" type="date" value={form.reg_close_date} onChange={e => setForm(f => ({ ...f, reg_close_date: e.target.value }))} /></div>
-            <div><label className="label">Event Date</label><input className="input" type="date" value={form.competition_date} onChange={e => setForm(f => ({ ...f, competition_date: e.target.value }))} /></div>
+            <F label="Reg Open"><input className="input" type="date" value={form.reg_open_date} onChange={e => setForm(f => ({ ...f, reg_open_date: e.target.value }))} /></F>
+            <F label="Reg Close"><input className="input" type="date" value={form.reg_close_date} onChange={e => setForm(f => ({ ...f, reg_close_date: e.target.value }))} /></F>
+            <F label="Event Date"><input className="input" type="date" value={form.competition_date} onChange={e => setForm(f => ({ ...f, competition_date: e.target.value }))} /></F>
           </div>
-          <div style={{ marginBottom: 18 }}><label className="label">Description</label><textarea className="input" value={form.description} onChange={e => setForm(f => ({ ...f, description: e.target.value }))} placeholder="Describe the competition…" /></div>
-          <button className="btn btn-primary" onClick={save} disabled={saving || !form.name || !form.organizer_name}>{saving ? <Spinner /> : '+'} Create</button>
+          <div style={{ marginBottom: 18 }}>
+            <F label="Description"><textarea className="input" value={form.description} onChange={e => setForm(f => ({ ...f, description: e.target.value }))} placeholder="Describe the competition…" /></F>
+          </div>
+          <div style={{ display: 'flex', gap: 8 }}>
+            <button className="btn btn-primary" onClick={save} disabled={saving || !form.name || !form.organizer_name}>
+              {saving ? <Spinner /> : editId ? '✓' : '+'} {editId ? 'Save Changes' : 'Create'}
+            </button>
+            <button className="btn btn-ghost" onClick={closeForm}>Cancel</button>
+          </div>
         </div>
       )}
 
@@ -308,7 +362,7 @@ export function Competitions() {
                 <thead><tr><th>Name</th><th>Category</th><th>Organizer</th><th>Fee</th><th>Close</th><th>Date</th><th></th></tr></thead>
                 <tbody>
                   {comps.map(c => (
-                    <tr key={c.id}>
+                    <tr key={c.id} style={{ background: editId === c.id ? 'rgba(99,102,241,.05)' : undefined }}>
                       <td style={{ color: 'var(--text-1)', fontWeight: 500, maxWidth: 240 }}>
                         <div style={{ overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{c.name}</div>
                         {c.grade_level && <div style={{ fontSize: 11, color: 'var(--text-3)', marginTop: 2 }}>{c.grade_level}</div>}
@@ -318,7 +372,12 @@ export function Competitions() {
                       <td>{c.fee === 0 ? <span className="badge badge-green">Free</span> : `Rp ${c.fee.toLocaleString('id-ID')}`}</td>
                       <td style={{ fontFamily: 'var(--ff-mono)', fontSize: 11 }}>{fmtDate(c.reg_close_date)}</td>
                       <td style={{ fontFamily: 'var(--ff-mono)', fontSize: 11 }}>{fmtDate(c.competition_date)}</td>
-                      <td><button className="btn btn-danger" onClick={() => remove(c.id, c.name)} style={{ padding: '4px 10px', fontSize: 11 }}>Del</button></td>
+                      <td>
+                        <div style={{ display: 'flex', gap: 6 }}>
+                          <button className="btn btn-ghost" onClick={() => openEdit(c)} style={{ padding: '4px 10px', fontSize: 11 }}>Edit</button>
+                          <button className="btn btn-danger" onClick={() => remove(c.id, c.name)} style={{ padding: '4px 10px', fontSize: 11 }}>Del</button>
+                        </div>
+                      </td>
                     </tr>
                   ))}
                 </tbody>
@@ -561,6 +620,7 @@ export function SendNotification() {
             <div className="card fi" style={{ background: 'var(--bg-elevated)', border: '1px solid var(--border-light)', padding: 16 }}>
               <span className="label" style={{ display: 'block', marginBottom: 10 }}>Preview</span>
               <div style={{ display: 'flex', gap: 10 }}>
+                <div style={{ width: 34, height: 34, borderRadius: 9, background: 'linear-gradient(135deg,var(--accent),#818cf8)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 14, flexShrink: 0 }}>✦</div>
                 <div>
                   <div style={{ fontSize: 13, fontWeight: 600, marginBottom: 4 }}>{title || 'Title…'}</div>
                   <div style={{ fontSize: 12, color: 'var(--text-2)', lineHeight: 1.5 }}>{body || 'Message…'}</div>

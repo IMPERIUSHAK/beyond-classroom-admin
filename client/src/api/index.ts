@@ -29,6 +29,7 @@ export const competitionsApi = {
     return http.get<{ competitions: Competition[]; pagination: Pagination }>(`/competitions?${q}`);
   },
   create: (data: Partial<Competition>) => http.post<Competition>('/competitions', data),
+  update: (id: string, data: Partial<Competition>) => http.put<Competition>(`/competitions/${id}`, data),
   delete: (id: string) => http.delete<{ message: string }>(`/competitions/${id}`),
 };
 

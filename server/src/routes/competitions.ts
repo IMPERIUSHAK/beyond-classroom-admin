@@ -63,14 +63,14 @@ router.post('/', async (req: Request, res: Response) => {
        RETURNING *`,
       [
         name, organizer_name,
-        category       || null,
-        grade_level    || null,
-        fee            || 0,
-        quota          || null,
-        description    || null,
-        image_url      || null,
-        reg_open_date  || null,
-        reg_close_date || null,
+        category        || null,
+        grade_level     || null,
+        fee             || 0,
+        quota           || null,
+        description     || null,
+        image_url       || null,
+        reg_open_date   || null,
+        reg_close_date  || null,
         competition_date || null,
       ]
     );
@@ -78,6 +78,57 @@ router.post('/', async (req: Request, res: Response) => {
   } catch (err) {
     console.error(err);
     res.status(500).json({ message: 'Failed to create competition' });
+  }
+});
+
+// PUT /api/competitions/:id
+router.put('/:id', async (req: Request, res: Response) => {
+  try {
+    const {
+      name, organizer_name, category, grade_level, fee, quota,
+      description, image_url, reg_open_date, reg_close_date, competition_date,
+    } = req.body;
+
+    const exists = await pool.query('SELECT id FROM competitions WHERE id = $1', [req.params.id]);
+    if (exists.rows.length === 0) {
+      res.status(404).json({ message: 'Competition not found' });
+      return;
+    }
+
+    const result = await pool.query(
+      `UPDATE competitions SET
+        name             = COALESCE($1, name),
+        organizer_name   = COALESCE($2, organizer_name),
+        category         = $3,
+        grade_level      = $4,
+        fee              = COALESCE($5, fee),
+        quota            = $6,
+        description      = $7,
+        image_url        = $8,
+        reg_open_date    = $9,
+        reg_close_date   = $10,
+        competition_date = $11
+       WHERE id = $12
+       RETURNING *`,
+      [
+        name             || null,
+        organizer_name   || null,
+        category         || null,
+        grade_level      || null,
+        fee              ?? null,
+        quota            || null,
+        description      || null,
+        image_url        || null,
+        reg_open_date    || null,
+        reg_close_date   || null,
+        competition_date || null,
+        req.params.id,
+      ]
+    );
+    res.json(result.rows[0]);
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ message: 'Failed to update competition' });
   }
 });
 
